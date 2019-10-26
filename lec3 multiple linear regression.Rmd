@@ -1,0 +1,82 @@
+---
+title: "Multiple linear regression"
+author: "Amira Ibrahim"
+date: "October 24, 2019"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+#Attach data
+```{r DATASET_MULTIPLELINEARREGRESSION, echo=TRUE}
+library(readr)
+Multiple_Linear_regression <- read.csv(file.choose(),header = TRUE)
+attach(Multiple_Linear_regression)
+```
+```{r, echo=TRUE}
+names(Multiple_Linear_regression)
+```
+#check normality :
+```{r, echo=TRUE}
+library(moments)
+skewness(HDL_LEVEL)
+```
+accepted range from -1 to +1
+```{r, echo=TRUE}
+kurtosis(HDL_LEVEL)
+```
+accepted range from -2 to +2 may to +3
+```{r, echo=TRUE}
+boxplot(HDL_LEVEL~Treatment , main="Relation between type of treatment & HDL level")
+```
+visually, data is normally distributed
+```{r, echo=TRUE}
+shapiro.test(HDL_LEVEL)
+```
+p-value > 0.05 , Fail to reject H0 , data is normally distributed
+
+#test : H0 :mean of HDL level in new drug = mean of HDL level in placebo
+```{r, echo=TRUE}
+t.test(HDL_LEVEL~Treatment , mu =0 , paired= F , alternative="two.sided" ,conf.int=TRUE, conf.level=0.95)
+```
+p-value > 0.05 , Fail to reject H0 , No significant diffrence in mean between two types of treatment.
+
+#Check correlation :
+```{r,echo=TRUE}
+cor(dummy_treatment, HDL_LEVEL)
+# +ve very weak correlation
+cor((dummy_treatment+dummy_sex), HDL_LEVEL)
+# +ve weak correlation
+```
+
+##building regressin model 
+```{r,echo=TRUE}
+mlm1 <- lm(HDL_LEVEL~dummy_treatment , data = Multiple_Linear_regression)
+summary(mlm1)
+```
+#test if sex is a cofounder
+```{r,echo=TRUE}
+mlm2 <- lm(HDL_LEVEL~dummy_treatment+dummy_sex , data = Multiple_Linear_regression)
+summary(mlm2)
+(0.5776 - 0.4696)*100
+```
+#there is 10.8 % change in coeffecient , Sex is confounder
+```{r,echo=TRUE}
+mlm3 <- lm(HDL_LEVEL~dummy_treatment+dummy_sex+(dummy_treatment*dummy_sex) ,
+           data=Multiple_Linear_regression)
+summary(mlm3)
+```
+#Y^ = b0+b1x1+b2x2+b3X1X2
+HDL level in Male (NEW Drug) = 38.3079 + (1.0673*1) + (7.8753*1) + (-5.5033*1*1)
+
+HDL level in Female (New Drug) = 38.3079 + (1.0673*1) + (7.8753*0) + (-5.5033*1*0)
+
+#visualize the assumption
+```{r,echo=TRUE}
+plot(mlm3)
+```
+
+```{r, include=FALSE}
+library(tinytex)
+options(tinytex.verbose = TRUE)
+```
